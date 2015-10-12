@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RoverSim"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/jmaxsum"/>
+	<classpathentry kind="lib" path="E:/EclipseWorkspace/RoverSim/lib/GLPKSolverPack.jar"/>
+	<classpathentry kind="lib" path="E:/EclipseWorkspace/RoverSim/lib/SCPSolver.jar"/>
+	<classpathentry kind="lib" path="E:/EclipseWorkspace/RoverSim/lib/LPSOLVESolverPack.jar"/>
+	<classpathentry kind="lib" path="E:/EclipseWorkspace/RoverSim/lib/javailp-1.2a.jar"/>
+	<classpathentry kind="lib" path="E:/EclipseWorkspace/RoverSim/lib/org.sat4j.core.jar"/>
+	<classpathentry kind="lib" path="C:/Users/MariamAsif/.m2/repository/org/ow2/sat4j/org.ow2.sat4j.core/2.3.4/org.ow2.sat4j.core-2.3.4.jar">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+			<attribute name="maven.groupId" value="org.ow2.sat4j"/>
+			<attribute name="maven.artifactId" value="org.ow2.sat4j.core"/>
+			<attribute name="maven.version" value="2.3.4"/>
+			<attribute name="maven.scope" value="compile"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="E:/EclipseWorkspace/RoverSim/lib/org.ow2.sat4j.pb-2.3.4.jar"/>
+	<classpathentry kind="lib" path="E:/EclipseWorkspace/RoverSim/lib/minisatjni1.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
