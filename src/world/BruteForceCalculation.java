@@ -187,18 +187,6 @@ public class BruteForceCalculation {
 		return p;
 	}
 	
-    public List<Integer[]> permute(List<Integer> arr, int k){
-        List<Integer[]> result = new ArrayList<Integer[]>();
-        Integer[] arg = new Integer[0];
-    	for(int i = k; i < arr.size(); i++){
-            java.util.Collections.swap(arr, i, k);
-            permute(arr, k+1);
-            java.util.Collections.swap(arr, k, i);
-        }
-        if (k == arr.size() -1){
-            result.add(arr.toArray(arg));
-        }
-		return result;
-    }
+    
 	
 }
