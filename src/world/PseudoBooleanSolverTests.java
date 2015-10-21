@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
+import org.junit.Assert;
 import masSim.schedule.AgentScheduleQualities;
 import masSim.schedule.TaskScheduleQualities;
 import net.sf.javailp.Linear;
@@ -27,6 +28,80 @@ import masSim.schedule.MultipleTaskScheduleQualities;
 import masSim.schedule.ScheduleQualities;
 
 public class PseudoBooleanSolverTests {
+	
+	@Test
+	public void CalculateBestAgent()
+	{
+		ArrayList<AgentScheduleQualities> input = CreateRamdomScheduleQualities(3,2);
+		CalculatePlain(input);
+		
+		/*BooleanOptimizationCalculator calc = new BooleanOptimizationCalculator();
+		int[] result1 = calc.SolveOptimizationProblem(input);
+		String result = calc.BuildOPBInput( input );
+		String filename = "E:\\EclipseWorkspace\\RoverSim\\TaskRepository\\problemDynamic.opb";
+		try (Writer writer = new BufferedWriter(new OutputStreamWriter(
+	        new FileOutputStream(filename), "US-ASCII"))) {
+			writer.write(result);
+		}
+		catch(Exception ex)
+		{
+			System.out.print(ex);
+		}
+		int[] result2 = calc.Solve("E:\\EclipseWorkspace\\RoverSim\\TaskRepository\\problemDynamic.opb");*/
+		System.out.println("Done");
+	}
+	
+	@Test
+	public void IsAssignmentValidTests()
+	{
+		int agentsSize = 3;
+		List<List<Integer>> taskCombinations = new ArrayList<List<Integer>>();
+		ArrayList<Integer> a = new ArrayList<Integer>();
+		ArrayList<Integer> b = new ArrayList<Integer>();
+		ArrayList<Integer> c = new ArrayList<Integer>();
+		
+		taskCombinations.add(a);
+		taskCombinations.add(b);
+		taskCombinations.add(c);
+		
+		//Test
+		a.add(1);
+		b.add(2);
+		b.add(3);
+		c.add(0);
+		
+		int[] assignments = new int[]{0,1,2};
+		Assert.assertEquals(true, IsAssignmentValid(assignments, agentsSize, taskCombinations) );
+		
+		b.add(2);Assert.assertEquals(false, IsAssignmentValid(assignments, agentsSize, taskCombinations) );
+	}
+	
+	@Test
+	public void BaseConversionTest()
+	{
+		int[] arr = null;
+		arr = ConvertBase10ToBaseNumberOfTasks(7,3,2);
+		Assert.assertArrayEquals(ConvertBase10ToBaseNumberOfTasks(0,3,2), new int[]{0,0,0,0});
+		Assert.assertArrayEquals(ConvertBase10ToBaseNumberOfTasks(1,3,2), new int[]{0,0,0,1});
+		Assert.assertArrayEquals(ConvertBase10ToBaseNumberOfTasks(2,3,2), new int[]{0,0,1,0});
+		Assert.assertArrayEquals(ConvertBase10ToBaseNumberOfTasks(3,3,2), new int[]{0,0,1,1});
+		Assert.assertArrayEquals(ConvertBase10ToBaseNumberOfTasks(4,3,2), new int[]{0,1,0,0});
+		Assert.assertArrayEquals(ConvertBase10ToBaseNumberOfTasks(5,3,2), new int[]{0,1,0,1});
+		Assert.assertArrayEquals(ConvertBase10ToBaseNumberOfTasks(6,3,2), new int[]{0,1,1,0});
+		Assert.assertArrayEquals(ConvertBase10ToBaseNumberOfTasks(7,3,2), new int[]{0,1,1,1});
+		Assert.assertArrayEquals(ConvertBase10ToBaseNumberOfTasks(8,3,2), new int[]{1,0,0,0});
+	}
+	
+	@Test
+	public void IntegerCombinationTest()
+	{
+		List<Integer> arr = Arrays.asList(1,2,3,4);
+		List<List<Integer>> result = GetArrayCombinations(arr);
+		for(List<Integer> r : result)
+		{
+			System.out.println(r);
+		}
+	}
 	
 	protected List<Integer[]> permute(List<Integer> arr, int k){
         List<Integer[]> result = new ArrayList<Integer[]>();
@@ -131,38 +206,7 @@ public class PseudoBooleanSolverTests {
 	}
 	
 	
-	//Test
-	public void IntegerCombinationTest()
-	{
-		List<Integer> arr = Arrays.asList(1,2,3,4);
-		List<List<Integer>> result = GetArrayCombinations(arr);
-		for(List<Integer> r : result)
-		{
-			System.out.println(r);
-		}
-	}
 	
-	@Test
-	public void CalculateBestAgent()
-	{
-		ArrayList<AgentScheduleQualities> input = CreateRamdomScheduleQualities(5,5);
-		CalculatePlain(input);
-		
-		/*BooleanOptimizationCalculator calc = new BooleanOptimizationCalculator();
-		int[] result1 = calc.SolveOptimizationProblem(input);
-		String result = calc.BuildOPBInput( input );
-		String filename = "E:\\EclipseWorkspace\\RoverSim\\TaskRepository\\problemDynamic.opb";
-		try (Writer writer = new BufferedWriter(new OutputStreamWriter(
-	        new FileOutputStream(filename), "US-ASCII"))) {
-			writer.write(result);
-		}
-		catch(Exception ex)
-		{
-			System.out.print(ex);
-		}
-		int[] result2 = calc.Solve("E:\\EclipseWorkspace\\RoverSim\\TaskRepository\\problemDynamic.opb");*/
-		System.out.println("Done");
-	}
 	
 	private int GetQualityIfAgentDoes(List<Integer> tasks, AgentScheduleQualities asql)
 	{
@@ -176,11 +220,27 @@ public class PseudoBooleanSolverTests {
 		return 0;
 	}
 	
+	private int[] ConvertBase10ToBaseNumberOfTasks(double number, int numAgents, int numTasksCombinations)
+	{
+		int[] result = new int[numAgents+1];
+		double remainder = number;
+		for(int i=numAgents; i>=0; i--)
+		{
+			double currentBase = Math.pow(numTasksCombinations,i);
+			result[numAgents-i] = (int)(remainder / currentBase);
+			remainder = remainder % currentBase;
+		}
+		return Arrays.copyOfRange(result, 1, result.length);
+	}
+	
 	private void CalculatePlain(ArrayList<AgentScheduleQualities> input)
 	{
 		MeasureTime.Timer2 = new MeasureTime();
 		MeasureTime.Timer2.Start();
 		
+		//Get all the unique task assignment combinations possible for a single agent. Since all agents share similar tasks,
+		//take the first agent and use his task list to initialize variable for all task combinations. E.g. for two tasks, 0,1, this variable
+		//should have 0,1,2,21
 		List<List<Integer>> taskCombinations = new ArrayList<List<Integer>>();
 		for(int i=0;i<input.get(0).TaskQualities.size();i++)
 		{
@@ -206,14 +266,16 @@ public class PseudoBooleanSolverTests {
 		int[] bestCombination = new int[0];
 		
 		int[] assignments = new int[agentsSize];
-		int j = 0;
+		
 		for(int i=0; i<totalPossibleValues; i++)
 		{
-			String s = Integer.toString(i, 37);
-			//Update combination
-			assignments[j]++;
-			j++;
-			if (j==agentsSize) j = 0;
+			assignments = ConvertBase10ToBaseNumberOfTasks(i,agentsSize, taskCombinationsSize);
+			System.out.println(Arrays.toString(assignments));
+			
+			if (!IsAssignmentValid(assignments, agentsSize, taskCombinations))
+			{
+				continue;
+			}
 			
 			int tempQuality = 0;
 			//Find combination quality
@@ -223,7 +285,7 @@ public class PseudoBooleanSolverTests {
 				try
 				{
 					List<Integer> tasksSet = taskCombinations.get( inn );
-					tempQuality += GetQualityIfAgentDoes( tasksSet, input.get(agentIndex)  );	
+					tempQuality += GetQualityIfAgentDoes( tasksSet, input.get(agentIndex)  );
 				}
 				catch(Exception ex)
 				{
@@ -239,13 +301,45 @@ public class PseudoBooleanSolverTests {
 			}
 		}
 		
-		
-		
-		
 		MeasureTime.Timer2.Stop();
 		System.out.println("Plain Calculation Took " + MeasureTime.Timer2.GetTotal());
 
 		System.out.println("Best Combination is " + Arrays.toString(bestCombination));
 	}
+	
+	
+	
+	private boolean IsAssignmentValid(int[] assignments, int agentsSize, List<List<Integer>> taskCombinations)
+	{
+		boolean result = true;
+		List<Integer> tasksAlreadyTakenUpByAnAgent = new ArrayList<Integer>();
+		
+		//List<Integer> tasksSetPrevious = null;
+		for(int agentIndex=0; agentIndex<agentsSize; agentIndex++)
+		{
+			int inn = assignments[agentIndex];
+			try
+			{
+				List<Integer> tasksSet = taskCombinations.get( inn );
+				for(Integer task : tasksSet)
+				{
+					if (tasksAlreadyTakenUpByAnAgent.contains(task))
+					{
+						return false;
+					}
+					else
+					{
+						tasksAlreadyTakenUpByAnAgent.add(task);
+					}
+				}
+			}
+			catch(Exception ex)
+			{
+				System.out.println(inn + " " + ex);
+			}	
+		}
+		return result;
+	}
+	
 	
 }
