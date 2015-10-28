@@ -19,7 +19,7 @@
 			<attribute name="maven.scope" value="compile"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="E:/EclipseWorkspace/RoverSim/lib/org.ow2.sat4j.pb-2.3.4.jar"/>
+	<classpathentry kind="lib" path="E:/EclipseWorkspace/RoverSim/lib/org.ow2.sat4j.pb-2.3.4.jar" sourcepath="C:/Users/MariamAsif/.m2/repository/org/ow2/sat4j/org.ow2.sat4j.pb/2.3.4/org.ow2.sat4j.pb-2.3.4-sources.jar"/>
 	<classpathentry kind="lib" path="E:/EclipseWorkspace/RoverSim/lib/minisatjni1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
