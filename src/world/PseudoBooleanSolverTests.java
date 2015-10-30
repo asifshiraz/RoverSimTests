@@ -36,7 +36,7 @@ public class PseudoBooleanSolverTests {
 		//for(int i=1;i<=128;i++){s += "3 x" + i + " ";}
 			
 		
-		DoBothCalculations(3,3);
+		DoBothCalculations(2,2);
 		
 		StringBuilder o = new StringBuilder();
 		for(int agents=2; agents<=6; agents++)
@@ -47,6 +47,46 @@ public class PseudoBooleanSolverTests {
 			}
 		}
 		System.out.println(o.toString());
+	}
+	
+	private int[] DoBothCalculations(int i, int j)
+	{
+		int[] timesTaken = new int[2]; 
+		ArrayList<AgentScheduleQualities> input = CreateRamdomScheduleQualities(i,j);
+		List<List<Integer>> taskCombinations = CreateCombinations(input);
+		
+		CalculatePlain(input, taskCombinations);
+		
+		BooleanOptimizationCalculator calc = new BooleanOptimizationCalculator();
+		//int[] result1 = calc.SolveOptimizationProblem(input);
+		Map<String, int[]> variableNameMappingToAgentTaskCombination = new HashMap<String, int[]>();
+		
+		String result = BuildOPBInput( input, variableNameMappingToAgentTaskCombination, taskCombinations, j );
+		String filename = "E:\\EclipseWorkspace\\RoverSim\\TaskRepository\\problemDynamic.opb";
+		try (Writer writer = new BufferedWriter(new OutputStreamWriter(
+	        new FileOutputStream(filename), "US-ASCII"))) {
+			writer.write(result);
+		}
+		catch(Exception ex)
+		{
+			System.out.print(ex);
+		}
+		int[] result2 = calc.Solve("E:\\EclipseWorkspace\\RoverSim\\TaskRepository\\problemDynamic.opb");
+		List<Integer> resultList = new ArrayList<Integer>();
+		System.out.println(Arrays.toString(resultList.toArray()));
+		for(int r=0; r<result2.length; r++)
+		{
+			if (result2[r]>0) 
+			{
+				resultList.add(result2[r]);
+				int[] agentCombination = variableNameMappingToAgentTaskCombination.get("x" + result2[r]);
+				System.out.println( agentCombination[0] + " does " + taskCombinations.get(agentCombination[1]) );//mapping object's second array element is task combination index
+			}
+			
+		}
+		//System.out.print(Arrays.toString(resultList.toArray()));
+		System.out.println("Done for " + i + " agents and " + j + " tasks");
+		return null;
 	}
 	
 	private List<List<Integer>> CreateCombinations(ArrayList<AgentScheduleQualities> input)
@@ -60,45 +100,6 @@ public class PseudoBooleanSolverTests {
 			taskCombinations.add(input.get(0).TaskQualities.get(i).TaskIds);
 		}
 		return taskCombinations;
-	}
-	
-	private int[] DoBothCalculations(int i, int j)
-	{
-		int[] timesTaken = new int[2]; 
-		ArrayList<AgentScheduleQualities> input = CreateRamdomScheduleQualities(i,j);
-		List<List<Integer>> taskCombinations = CreateCombinations(input);
-		
-		CalculatePlain(input, taskCombinations);
-		
-		BooleanOptimizationCalculator calc = new BooleanOptimizationCalculator();
-		//int[] result1 = calc.SolveOptimizationProblem(input);
-		Map<String, int[]> variableNameMappingToAgentTaskCombination = new HashMap<String, int[]>();;
-		
-		String result = BuildOPBInput( input, variableNameMappingToAgentTaskCombination, taskCombinations );
-		String filename = "E:\\EclipseWorkspace\\RoverSim\\TaskRepository\\problemDynamic.opb";
-		try (Writer writer = new BufferedWriter(new OutputStreamWriter(
-	        new FileOutputStream(filename), "US-ASCII"))) {
-			writer.write(result);
-		}
-		catch(Exception ex)
-		{
-			System.out.print(ex);
-		}
-		int[] result2 = calc.Solve("E:\\EclipseWorkspace\\RoverSim\\TaskRepository\\problemDynamic.opb");
-		List<Integer> resultList = new ArrayList<Integer>();
-		for(int r=0; r<result2.length; r++)
-		{
-			if (result2[r]>0) 
-			{
-				resultList.add(result2[r]);
-				int[] bestCombination = variableNameMappingToAgentTaskCombination.get("x" + result2[r]);
-				//System.out.println(RemapAssignmentToAgentTasks(bestCombination, taskCombinations));
-			}
-			
-		}
-		//System.out.print(Arrays.toString(resultList.toArray()));
-		System.out.println("Done for " + i + " agents and " + j + " tasks");
-		return null;
 	}
 	
 	@Test
@@ -169,15 +170,15 @@ public class PseudoBooleanSolverTests {
 	
 	protected int GetRandomBaseQuality()
 	{
-		int min = 10;
+		int min = 80;
 		int max = 100;
 		return (int)(Math.random() * (max - min) + min);
 	}
 	
 	protected int GetRandomIncrementalQuality()
 	{
-		int min = 20;
-		int max = 50;
+		int min = 100;
+		int max = 120;
 		return (int)(Math.random() * (max - min) + min);
 	}
 	
@@ -257,73 +258,25 @@ public class PseudoBooleanSolverTests {
 	}
 	
 	
-	public String BuildOPBInput2(ArrayList<AgentScheduleQualities> input, Map<String, int[]> variableNameMappingToAgentTastCombination)
-	{	
-		StringBuilder opb = new StringBuilder();
-		
-		//Get all the unique task assignment combinations possible for a single agent. Since all agents share similar tasks,
-		//take the first agent and use his task list to initialize variable for all task combinations. E.g. for two tasks, 0,1, this variable
-		//should have 0,1,2,21
-		List<List<Integer>> taskCombinations = new ArrayList<List<Integer>>();
-		for(int i=0;i<input.get(0).TaskQualities.size();i++)
+	
+	private void AddPBVariableToConstraintsList(Map<Integer,List<String>> constraintsPerTask, String variable, List<Integer> tasksForThisVariable)
+	{
+		for(Integer _int : tasksForThisVariable)
 		{
-		}
-		int taskCombinationsSize = taskCombinations.size();
-		int taskSize = input.get(0).TaskIds.size();
-		//Get all unique agents
-		List<Integer> agentIds = new ArrayList<Integer>();
-		for(int i=0;i<input.size();i++)
-		{
-			agentIds.add(input.get(i).AgentVariableId);
-		}
-		int agentsSize = agentIds.size();
-		
-		opb.append(  String.format("* #variable= %1$s #constraint= %2$s%3$s", agentsSize * taskSize, taskCombinationsSize, System.lineSeparator()));
-		opb.append("min:");
-		int i = 1;
-		for(int agent=0; agent<agentsSize; agent++)
-		{
-			for(int j=0; j<taskCombinationsSize; j++)
+			if (constraintsPerTask.containsKey(_int))
 			{
-				int [] mapping = new int[2];
-				mapping[0] = agent;
-				mapping[1] = j;
-				String variableName = "x" + i++;
-				variableNameMappingToAgentTastCombination.put(variableName,mapping);
-				
-				//Calculate quality for this combination
-				int quality = this.GetQualityIfAgentDoes(taskCombinations.get(j), input.get(agent));
-				if (quality>0)//- sign to convert min function to max
-					opb.append(" -" + quality + " " + variableName);
-				else if (quality<0)
-					opb.append(" " + Math.abs(quality) + " " + variableName);
-				else
-					opb.append(" " + quality + " " + variableName);
+				constraintsPerTask.get(_int).add(variable);
+			}
+			else
+			{
+				List<String> arr = new ArrayList<String>();
+				arr.add(variable);
+				constraintsPerTask.put(_int, arr);
 			}
 		}
-		opb.append(";" + System.lineSeparator());
-		String[] constraints = new String[taskCombinationsSize];
-		for(int j=1;j<=taskCombinationsSize;j++)
-		{
-			constraints[j-1] = "";
-		}
-		int index = 1;
-		for(int k=1;k<=agentsSize;k++)
-		{
-			for(int j=1;j<=taskCombinationsSize;j++)
-			{
-				constraints[j-1] += "1 x"+index++ + " ";
-			}	
-		}
-		for(int j=1;j<=taskCombinationsSize;j++)
-		{
-			if (constraints[j-1].length()!=0)
-				opb.append(constraints[j-1] + "= 1;" + System.lineSeparator());
-		}
-		return opb.toString();
 	}
 	
-	public String BuildOPBInput(ArrayList<AgentScheduleQualities> input, Map<String, int[]> variableNameMappingToAgentTastCombination, List<List<Integer>> taskCombinations)
+	public String BuildOPBInput(ArrayList<AgentScheduleQualities> input, Map<String, int[]> variableNameMappingToAgentTastCombination, List<List<Integer>> taskCombinations, int numberOfTasks)
 	{	
 		StringBuilder opb = new StringBuilder();
 				
@@ -336,32 +289,43 @@ public class PseudoBooleanSolverTests {
 			agentIds.add(input.get(i).AgentVariableId);
 		}
 		int agentsSize = agentIds.size();
+				
+		Map<Integer,List<String>> constraintsPerTask = new HashMap<Integer, List<String>>();
 		
-		opb.append(  String.format("* #variable= %1$s #constraint= %2$s%3$s", agentsSize * taskCombinationsSize, taskCombinationsSize, System.lineSeparator()));
+		opb.append(  String.format("* #variable= %1$s #constraint= %2$s%3$s", agentsSize * taskCombinationsSize, numberOfTasks, System.lineSeparator()));
 		opb.append("min:");
 		int i = 1;
+		String variableMappingCommentBlock = "* ";
 		for(int agent=0; agent<agentsSize; agent++)
 		{
 			for(int j=0; j<taskCombinationsSize; j++)
 			{
 				int [] mapping = new int[2];
-				mapping[0] = agent;
+				mapping[0] = input.get(agent).AgentVariableId;
 				mapping[1] = j;
 				String variableName = "x" + i++;
 				variableNameMappingToAgentTastCombination.put(variableName,mapping);
 				
 				//Calculate quality for this combination
-				int quality = this.GetQualityIfAgentDoes(taskCombinations.get(j), input.get(agent));
+				List<Integer> t = taskCombinations.get(j);
+				int quality = this.GetQualityIfAgentDoes(t, input.get(agent));
 				if (quality>0)//- sign to convert min function to max
+				{	
 					opb.append(" -" + quality + " " + variableName);
+				}
 				else if (quality<0)
 					opb.append(" " + Math.abs(quality) + " " + variableName);
 				else
 					opb.append(" " + quality + " " + variableName);
+				variableMappingCommentBlock += variableName + "=" + Arrays.toString(t.toArray()) + " ";
+				AddPBVariableToConstraintsList(constraintsPerTask, variableName, t);
 			}
 		}
 		opb.append(";" + System.lineSeparator());
-		String[] constraints = new String[taskCombinationsSize];
+		opb.append(variableMappingCommentBlock + System.lineSeparator());
+		//Create constraints
+		
+		/*String[] constraints = new String[taskCombinationsSize];
 		for(int j=1;j<=taskCombinationsSize;j++)
 		{
 			constraints[j-1] = "";
@@ -378,6 +342,14 @@ public class PseudoBooleanSolverTests {
 		{
 			if (constraints[j-1].length()!=0)
 				opb.append(constraints[j-1] + "= 1;" + System.lineSeparator());
+		}*/
+		for(List<String> constraintsForATask : constraintsPerTask.values())
+		{
+			for(String str : constraintsForATask)
+			{
+				opb.append( "1 " + str + " "  );
+			}
+			opb.append( "= 1;" + System.lineSeparator() );
 		}
 		return opb.toString();
 	}
@@ -471,20 +443,20 @@ public class PseudoBooleanSolverTests {
 		
 		MeasureTime.Timer2.Stop();
 		System.out.println("Plain Calculation Took " + MeasureTime.Timer2.GetTotal());
-		System.out.println(RemapAssignmentToAgentTasks(bestCombination, taskCombinations));
+		System.out.println(RemapToAgentTasksFromTaskCombinations(bestCombination, taskCombinations, input));
 		
 	}
 	
-	private String RemapAssignmentToAgentTasks(int[] chosenAssignment, List<List<Integer>> taskCombinations)
+	private String RemapToAgentTasksFromTaskCombinations(int[] chosenAssignment, List<List<Integer>> taskCombinations, ArrayList<AgentScheduleQualities> input)
 	{
-		String r = "Best Combination: ";
+		String r = "Best Combination: " + System.lineSeparator();
 		for(int i=0;i<chosenAssignment.length;i++)
 		{
-			r += "Agent " + (i+1) + " does tasks ";
+			r += input.get(i).AgentVariableId + " does tasks ";
 			List<Integer> tasks = taskCombinations.get(chosenAssignment[i]);
 			for(Integer in : tasks)
 			{
-				r += " " + in + ", ";
+				r += " " + in + " " + System.lineSeparator();
 			}
 		}
 		return r;
