@@ -45,7 +45,7 @@ public class BruteForceCalculation {
 	public void CreateTestFiles()
 	{
 		int numberOfTasks = 10;
-		String filenameDetails = "E:\\EclipseWorkspace\\RoverSim\\TaskRepository\\TaskDetails.xml";
+		String filenameDetails = "E:\\EclipseWorkspace\\RoverSim\\TaskRepository\\TasksDetails.xml";
 		String filenameMain = "E:\\EclipseWorkspace\\RoverSim\\TaskRepository\\TasksMain.xml";
 		try {
 			details = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filenameDetails), "US-ASCII"));
@@ -77,7 +77,7 @@ public class BruteForceCalculation {
 		agents = SimWorld.CreateAgents(null);
 		TaskRepository taskRepository = new TaskRepository();
 		taskRepository.repositoryFolderPath = "E:\\EclipseWorkspace\\RoverSim\\TaskRepository\\";
-		taskRepository.ReadTaskDescriptions("TaskDetails.xml");
+		taskRepository.ReadTaskDescriptions("TasksDetails.xml");
 		
 		long start = System.currentTimeMillis();
 		

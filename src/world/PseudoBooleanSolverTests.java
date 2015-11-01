@@ -22,28 +22,28 @@ import net.sf.javailp.Result;
 import net.sf.javailp.Solver;
 import net.sf.javailp.SolverFactory;
 import net.sf.javailp.SolverFactoryLpSolve;
+import raven.Main;
 import raven.MeasureTime;
+import raven.ScenarioGenerator;
 import masSim.schedule.BooleanOptimizationCalculator;
 import masSim.schedule.MultipleTaskScheduleQualities;
 import masSim.schedule.ScheduleQualities;
 
 public class PseudoBooleanSolverTests {
 	
+	private boolean debugFlag = false;
+	
 	@Test
 	public void CalculateBestAgent()
 	{	
-		//String s = "";
-		//for(int i=1;i<=128;i++){s += "3 x" + i + " ";}
-			
-		
-		DoBothCalculations(2,2);
+		//DoBothCalculations(2,3);
 		
 		StringBuilder o = new StringBuilder();
-		for(int agents=2; agents<=6; agents++)
+		for(int agents=5; agents<=5; agents++)
 		{
 			for(int tasks=2; tasks<=4; tasks++)
 			{
-				//DoBothCalculations(agents, tasks);
+				DoBothCalculations(agents, tasks);
 			}
 		}
 		System.out.println(o.toString());
@@ -51,8 +51,9 @@ public class PseudoBooleanSolverTests {
 	
 	private int[] DoBothCalculations(int i, int j)
 	{
+		ScenarioGenerator gen = new ScenarioGenerator();
 		int[] timesTaken = new int[2]; 
-		ArrayList<AgentScheduleQualities> input = CreateRamdomScheduleQualities(i,j);
+		ArrayList<AgentScheduleQualities> input = gen.CreateRamdomScheduleQualities(i,j);
 		List<List<Integer>> taskCombinations = CreateCombinations(input);
 		
 		CalculatePlain(input, taskCombinations);
@@ -86,7 +87,7 @@ public class PseudoBooleanSolverTests {
 		}
 		//System.out.print(Arrays.toString(resultList.toArray()));
 		System.out.println("Done for " + i + " agents and " + j + " tasks");
-		return null;
+		return timesTaken;
 	}
 	
 	private List<List<Integer>> CreateCombinations(ArrayList<AgentScheduleQualities> input)
@@ -146,8 +147,9 @@ public class PseudoBooleanSolverTests {
 	@Test
 	public void IntegerCombinationTest()
 	{
+		ScenarioGenerator gen = new ScenarioGenerator();
 		List<Integer> arr = Arrays.asList(1,2,3,4);
-		List<List<Integer>> result = GetArrayCombinations(arr);
+		List<List<Integer>> result = gen.GetArrayCombinations(arr);
 		for(List<Integer> r : result)
 		{
 			System.out.println(r);
@@ -167,96 +169,6 @@ public class PseudoBooleanSolverTests {
         }
 		return result;
     }
-	
-	protected int GetRandomBaseQuality()
-	{
-		int min = 80;
-		int max = 100;
-		return (int)(Math.random() * (max - min) + min);
-	}
-	
-	protected int GetRandomIncrementalQuality()
-	{
-		int min = 100;
-		int max = 120;
-		return (int)(Math.random() * (max - min) + min);
-	}
-	
-	private ArrayList<AgentScheduleQualities> CreateRamdomScheduleQualities(int numberOfAgents, int numberOfTasks)
-	{
-		ArrayList<AgentScheduleQualities> scheduleQualities = new ArrayList<AgentScheduleQualities>();
-		for(int i = 1; i<=numberOfAgents; i++)
-		{
-			AgentScheduleQualities a = new AgentScheduleQualities(100+i);
-			a.TaskQualities = new ArrayList<MultipleTaskScheduleQualities>();
-			List<Integer> taskIds = CreateRandomArrayOfTaskIds(numberOfTasks);
-			for(int j = 1; j<=numberOfTasks; j++)
-			{
-				a.TaskIds = taskIds;
-				a.TaskQualities = GetRandomMultipleTaskScheduleQualities(taskIds);
-			}
-			scheduleQualities.add(a);
-		}
-		return scheduleQualities;
-	}
-	
-	private ArrayList<MultipleTaskScheduleQualities> GetRandomMultipleTaskScheduleQualities(List<Integer> taskIds)
-	{
-		ArrayList<MultipleTaskScheduleQualities> result = new ArrayList<MultipleTaskScheduleQualities>();
-		int base = GetRandomBaseQuality();
-		List<List<Integer>> taskCombinations = GetArrayCombinations(taskIds);
-		for(List<Integer> taskCombination : taskCombinations)
-		{
-			result.add(new MultipleTaskScheduleQualities(taskCombination,base,GetRandomIncrementalQuality()));	
-		}
-		result.add(new MultipleTaskScheduleQualities(new ArrayList<Integer>(),base,base));	
-		return result;
-	}
-	
-	private List<Integer> Clone(List<Integer> arr)
-	{
-		List<Integer> copy = new ArrayList<Integer>();
-		copy.addAll(arr);
-		return copy;
-	}
-	
-	protected List<List<Integer>> GetArrayCombinations(List<Integer> arr)
-	{
-		List<List<Integer>> result = new ArrayList<List<Integer>>();
-		if (arr.size()<=1)
-		{ 
-			result.add(Clone(arr));
-		}
-		else
-		{
-			int firstInteger = arr.get(0);
-			List<Integer> subArrayWithOneLessItem = arr.subList(1, arr.size());
-			List<List<Integer>> combinations = GetArrayCombinations(subArrayWithOneLessItem);
-			for(List<Integer> aCombination : combinations)
-			{
-				result.add(aCombination);
-				List<Integer> aCombinationWithFirstIntegerAdded = Clone(aCombination);
-				aCombinationWithFirstIntegerAdded.add(firstInteger);
-				result.add(aCombinationWithFirstIntegerAdded);
-			}
-			List<Integer> aCombinationWithOnlFirstInteger = new ArrayList<Integer>();
-			aCombinationWithOnlFirstInteger.add(firstInteger);
-			result.add(aCombinationWithOnlFirstInteger);
-		}
-		
-		return result;
-	}
-	
-	private List<Integer> CreateRandomArrayOfTaskIds(int numberOfTasks)
-	{
-		List<Integer> tasks = new ArrayList<Integer>();
-		for(int i=0; i<numberOfTasks; i++)
-		{
-			tasks.add(1000 +i);
-		}
-		return tasks;
-	}
-	
 	
 	
 	private void AddPBVariableToConstraintsList(Map<Integer,List<String>> constraintsPerTask, String variable, List<Integer> tasksForThisVariable)
@@ -300,8 +212,9 @@ public class PseudoBooleanSolverTests {
 		{
 			for(int j=0; j<taskCombinationsSize; j++)
 			{
+				int agentVariable = input.get(agent).AgentVariableId;
 				int [] mapping = new int[2];
-				mapping[0] = input.get(agent).AgentVariableId;
+				mapping[0] = agentVariable;
 				mapping[1] = j;
 				String variableName = "x" + i++;
 				variableNameMappingToAgentTastCombination.put(variableName,mapping);
@@ -317,7 +230,7 @@ public class PseudoBooleanSolverTests {
 					opb.append(" " + Math.abs(quality) + " " + variableName);
 				else
 					opb.append(" " + quality + " " + variableName);
-				variableMappingCommentBlock += variableName + "=" + Arrays.toString(t.toArray()) + " ";
+				variableMappingCommentBlock += variableName + "=" + agentVariable + Arrays.toString(t.toArray()) + " ";
 				AddPBVariableToConstraintsList(constraintsPerTask, variableName, t);
 			}
 		}
@@ -413,6 +326,7 @@ public class PseudoBooleanSolverTests {
 			
 			if (!IsAssignmentValid(nextAssignment, agentsSize, taskCombinations))
 			{
+				Main.Message(debugFlag, RemapToAgentTasksFromTaskCombinations(nextAssignment, taskCombinations, input)+ " INVALID");
 				continue;
 			}
 			lastValidAssignment = nextAssignment;
@@ -433,6 +347,7 @@ public class PseudoBooleanSolverTests {
 				}
 				
 			}
+			Main.Message(debugFlag, RemapToAgentTasksFromTaskCombinations(nextAssignment, taskCombinations, input) + " " + tempQuality);
 			//If this is best, assign
 			if (tempQuality>bestQuality)
 			{
@@ -444,20 +359,20 @@ public class PseudoBooleanSolverTests {
 		MeasureTime.Timer2.Stop();
 		System.out.println("Plain Calculation Took " + MeasureTime.Timer2.GetTotal());
 		System.out.println(RemapToAgentTasksFromTaskCombinations(bestCombination, taskCombinations, input));
-		
 	}
 	
 	private String RemapToAgentTasksFromTaskCombinations(int[] chosenAssignment, List<List<Integer>> taskCombinations, ArrayList<AgentScheduleQualities> input)
 	{
-		String r = "Best Combination: " + System.lineSeparator();
+		String r = "";
 		for(int i=0;i<chosenAssignment.length;i++)
 		{
-			r += input.get(i).AgentVariableId + " does tasks ";
+			r += input.get(i).AgentVariableId + " [";
 			List<Integer> tasks = taskCombinations.get(chosenAssignment[i]);
 			for(Integer in : tasks)
 			{
-				r += " " + in + " " + System.lineSeparator();
+				r += in + ",";
 			}
+			r += "] ";
 		}
 		return r;
 	}
